@@ -545,6 +545,49 @@ class ChatStat:
         # stub for something upcoming (possibly)
 
 
+    @show_or_return
+    def cumulative_call_time(self, top=10, kind="bar", include_groups=True, show=True):
+        """
+        plots the largest call time by chat. by default, only plots top 10
+
+        Parameters
+        ----------
+        top: int, default=10
+            limits the plot to `top` number of chats
+        kind: str in {'pie', 'bar'}
+            kind of chart to plot, pie or bar
+        include_groups: bool
+            whether or not to include group chats
+        show: bool, default=True
+            toggle to show fig instead of returning graph obj
+
+        Returns
+        -------
+        plotly.graph_objects
+            graph object (Bar or Pie)
+        """
+        sum_df = self.msg_df.groupby("thread_path").sum()
+        sum_df['call_duration'] = sum_df['call_duration'].apply(lambda x: round(x / 3600, 1))
+        sum_df.sort_values("call_duration", inplace=True, ascending=False)
+        sum_df = sum_df.join(self.chat_df)
+        if not include_groups:
+            sum_df = sum_df[sum_df.thread_type == 'Regular']
+        sum_df = sum_df[:top]
+        if kind == "pie":
+            graph = go.Pie(labels=sum_df.title, values=sum_df.call_duration, title=f"Top {top} largest chats")
+            fig = go.Figure(graph)
+        elif kind == "bar":
+            graph = go.Bar(x=sum_df.title, y=sum_df.call_duration)
+            fig = go.Figure(graph)
+            fig.update_layout(xaxis=go.layout.XAxis(title=go.layout.xaxis.Title(text="Chat")),
+                              yaxis=go.layout.YAxis(title=go.layout.yaxis.Title(text="Cumulative call time in seconds")))
+        else:
+            raise ValueError("kind must be either 'pie' or 'bar'")
+        fig.update_layout(title_text=f"Top {top} largest chats")
+        return fig, graph
+
+
+
 if __name__ == "__main__":
     import loader
 

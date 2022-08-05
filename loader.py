@@ -46,7 +46,7 @@ def parse_from_json(path=None):
                  'is_still_participant', 'thread_type', 'thread_path']
     message_data = []
     msg_cols = ['thread_path', 'timestamp', 'msg',
-                'sender', 'msg_type', 'sticker', 'photos', 'videos']
+                'sender', 'msg_type', 'sticker', 'photos', 'videos', 'call_duration']
 
     for json_file in all_files:
         with open(json_file) as json_file:
@@ -74,9 +74,10 @@ def parse_from_json(path=None):
             sticker = msg.get('sticker', None)
             photos = msg.get('photos', None)
             videos = msg.get('videos', None)
+            call_duration = msg.get('call_duration', None)
 
             message_data.append(
-                [thread_path, ts, body, sender, msg_type, sticker, photos, videos])
+                [thread_path, ts, body, sender, msg_type, sticker, photos, videos, call_duration])
 
     chat_df = pd.DataFrame(chat_data, columns=chat_cols)
     chat_df.set_index('thread_path', inplace=True)
